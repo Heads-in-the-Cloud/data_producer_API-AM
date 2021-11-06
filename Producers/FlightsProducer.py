@@ -4,7 +4,7 @@ import json
 from random import randint, uniform
 
 
-def run(uri, token, size):
+def run(uri, token, size, debug):
     # faker
     fake = Faker('en_US')
 
