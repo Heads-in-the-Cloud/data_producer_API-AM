@@ -14,8 +14,8 @@ uri_list = {'users': os.environ['uri_users'],
             'bookings': os.environ['uri_bookings']}
 
 sizes = [int(os.environ['size_users']),
-         int(os.environ['size_users']),
-         int(os.environ['size_users'])]
+         int(os.environ['size_flights']),
+         int(os.environ['size_bookings'])]
 
 HEADER_STRING = os.environ['jwt_header']
 
@@ -38,11 +38,18 @@ def bookings_producer(uri, jwt_token, size):
     BookingsProducer.run(uri, jwt_token, size, debug)
 
 
-options_list = "\nAvailable Data Producers:\n" \
-               "  1: Users Producer\n" \
-               "  2: Flights Producer\n" \
-               "  3: Bookings Producer\n" \
-               "  4: Exit\n"
+def all_producers(uri, jwt_token, prod_sizes):
+    UsersProducer.run(uri, jwt_token, prod_sizes[0], debug)
+    FlightsProducer.run(uri, jwt_token, prod_sizes[1], debug)
+    BookingsProducer.run(uri, jwt_token, prod_sizes[2], debug)
+
+
+options_list = "\nAvailable Options:\n" \
+               "  1: Run Users Producer\n" \
+               "  2: Run Flights Producer\n" \
+               "  3: Run Bookings Producer\n" \
+               "  4: Run All Producers\n" \
+               "  5: Exit\n"
 options = {1: users_producer,
            2: flights_producer,
            3: bookings_producer}
@@ -76,7 +83,8 @@ if __name__ == '__main__':
             token = {'Authorization': 'Bearer {}'.format(jwt)}
         except requests.ConnectionError:
             # catch failed to connect
-            print("Unable to connect to the server. Confirm that the Authentication server is running.")
+            print("Unable to connect to Authentication servers. Please confirm "
+                  "that the Authentication server is running.")
             exit(1)
         except KeyError:
             # catch invalid login
@@ -110,16 +118,22 @@ if __name__ == '__main__':
         # Run Producers #
         #################
 
-        # check exit code
-        if select == 4:
+        # exit code option
+        if select == 5:
             print("Exiting...")
             exit(0)
 
-        # guarantee selection is within range
-        if select not in options.keys():
-            print("Option " + str(select) + " is not a valid option. Please enter a valid option.")
+        # all data producers option
+        if select == 4:
+            all_producers(uri_list, token, sizes)
+            print(options_list)
             continue
-        options[select](uri_list, token, sizes[select])
+
+        # guarantee selection is otherwise within range and run
+        if select not in options.keys():
+            print(f"Option '{select}' is not a valid option. Please enter a valid option.")
+            continue
+        options[select](uri_list, token, sizes[select - 1])
 
         # re-print options for new loop
         print(options_list)

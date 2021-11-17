@@ -47,7 +47,7 @@ def run(uri, token, size, debug):
         print("Users Generated.")
 
     #####################
-    # Generating Agents #
+    # Generate Agents #
     #####################
 
     if debug:
@@ -76,4 +76,3 @@ def run(uri, token, size, debug):
         print("There was an error inserting into the Users database. Exiting...")
         exit(1)
     print("Users successfully added.")
-    exit(0)

@@ -5,21 +5,37 @@ from random import randint, uniform
 
 
 def run(uri, token, size, debug):
-    # faker
-    fake = Faker('en_US')
 
-    # airports
+    ###########
+    # Startup #
+    ###########
+
+    fake = Faker('en_US')
+    print("Starting Flights Producer.")
+    flights_size = int(size)
+
+    #####################
+    # Generate Airports #
+    #####################
+
+    if debug:
+        print("Generating exactly 20 airports.")
     for i in range(20):
         airport = {'city': fake.city(),
                    'iataId': fake.pystr(3, 3).upper()}
         requests.post(uri['flights'] + '/api/v1/airports', json=airport, verify=False, headers=token)
 
-    # routes (uses airports)
+    ###################
+    # Generate Routes #
+    ###################
+
+    if debug:
+        print("Generating exactly 40 routes.")
     airports_info = json.loads(requests.get(uri['flights'] + '/api/v1/airports', verify=False, headers=token).text)
     airports = []
     for airport in airports_info:
         airports.append(airport['id'])
-    for i in range(50):
+    for i in range(40):
         origin = airports[randint(0, len(airports) - 1)]
         destination = airports[randint(0, len(airports) - 1)]
         if origin != destination:
@@ -27,21 +43,35 @@ def run(uri, token, size, debug):
                      'destination': destination}
             requests.post(uri['flights'] + '/api/v1/routes', json=route, verify=False, headers=token)
 
-    # airplane types
+    ###########################
+    # Generate Airplane Types #
+    ###########################
+
+    if debug:
+        print("Generating exactly 10 airplane types.")
     for i in range(10):
         airplane_type = {'maxCapacity': (i * 20) + 100}
         requests.post(uri['flights'] + '/api/v1/airplaneTypes', json=airplane_type, verify=False, headers=token)
 
-    # airplanes (uses airplane types)
+    ######################
+    # Generate Airplanes #
+    ######################
+
+    if debug:
+        print("Generating exactly 25 airplanes.")
     types_info = json.loads(requests.get(uri['flights'] + '/api/v1/airplaneTypes', verify=False, headers=token).text)
     types = []
     for type_num in types_info:
         types.append(type_num['id'])
-    for i in range(20):
+    for i in range(25):
         airplane = {'airplaneType': types[randint(0, len(types) - 1)]}
         requests.post(uri['flights'] + '/api/v1/airplanes', json=airplane, verify=False, headers=token)
 
-    # flights (uses routes and airplanes)
+    ####################
+    # Generate Flights #
+    ####################
+
+    print(f"Generating {flights_size} flights.")
     routes_info = json.loads(requests.get(uri['flights'] + '/api/v1/routes', verify=False, headers=token).text)
     airplanes_info = json.loads(requests.get(uri['flights'] + '/api/v1/airplanes', verify=False, headers=token).text)
     routes = []

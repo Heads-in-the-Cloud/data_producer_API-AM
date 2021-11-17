@@ -7,15 +7,17 @@ from random import randint, seed
 
 def run(uri, token, size, debug):
 
-    # faker
+    ###########
+    # Startup #
+    ###########
+
     fake = Faker('en_US')
     seed(time.process_time())
 
-    ################
-    # COLLECT DATA #
-    ################
+    #####################
+    # Collect User Info #
+    #####################
 
-    # users
     users_list = json.loads(requests.get(uri['users'] + '/api/v1/users/role/1', verify=False, headers=token).text)
     users = []
     for user in users_list:
@@ -23,7 +25,10 @@ def run(uri, token, size, debug):
     if debug:
         print('user IDs:', users)
 
-    # flights
+    #######################
+    # Collect Flight Info #
+    #######################
+
     flights_list = json.loads(requests.get(uri['flights'] + '/api/v1/flights', verify=False, headers=token).text)
     flights = []
     for flight in flights_list:
@@ -31,7 +36,10 @@ def run(uri, token, size, debug):
     if debug:
         print('flight IDs:', flights)
 
-    # agents
+    ######################
+    # Collect Agent Info #
+    ######################
+
     agents_list = json.loads(requests.get(uri['users'] + '/api/v1/users/role/2', verify=False, headers=token).text)
     agents = []
     for agent in agents_list:
@@ -39,11 +47,23 @@ def run(uri, token, size, debug):
     if debug:
         print('agent IDs:', agents)
 
-    #################
-    # GENERATE DATA #
-    #################
+    ############################
+    # Guarantee Data Integrity #
+    ############################
 
-    # bookings for users
+    if len(users) < 2 or len(agents) < 1:
+        print("Unable to read User data when creating Bookings.\n"
+              "Please run the User data producer before Bookings.")
+        exit(1)
+    if len(flights) < 1:
+        print("Unable to read Flight data when creating Bookings.\n"
+              "Please run the Flight data producer before Bookings.")
+        exit(1)
+
+    ##########################
+    # Generate User Bookings #
+    ##########################
+
     for i in range(round(size * .66)):
         booking = {'isActive': 1,
                    'confirmationCode': fake.pystr(10, 10),
@@ -52,7 +72,10 @@ def run(uri, token, size, debug):
                    'userId': users[randint(0, len(users) - 1)]}
         requests.post(uri['bookings'] + '/api/v1/bookings', json=booking, verify=False, headers=token)
 
-    # bookings for guests
+    ###########################
+    # Generate Guest Bookings #
+    ###########################
+
     for i in range(round(size * .33)):
         booking = {'isActive': 1,
                    'confirmationCode': fake.pystr(10, 10),
@@ -62,11 +85,10 @@ def run(uri, token, size, debug):
                    'guestPhone': fake.phone_number()}
         requests.post(uri['bookings'] + '/api/v1/bookings', json=booking, verify=False, headers=token)
 
-    ###############
-    # RESULT DATA #
-    ###############
+    #######################
+    # Get Posted Bookings #
+    #######################
 
-    # result bookings
     bookings_list = json.loads(requests.get(uri['bookings'] + '/api/v1/bookings', verify=False, headers=token).text)
     bookings = []
     for booking in bookings_list:
@@ -75,12 +97,16 @@ def run(uri, token, size, debug):
     if debug:
         print('booking IDs:', bookings)
 
-    ###################
-    # CONTINGENT DATA #
-    ###################
+    ############################
+    # Generate Contingent Data #
+    ############################
 
     for booking in bookings:
-        # passengers
+
+        ##############
+        # Passengers #
+        ##############
+
         genders = ['Male', 'Female', 'Other', 'Not Specified']
         for i in range(randint(1, 4)):
             # create passenger
@@ -93,7 +119,10 @@ def run(uri, token, size, debug):
                          'address': fake.address()[0:44]}
             requests.post(uri['bookings'] + '/api/v1/passengers', json=passenger, verify=False, headers=token)
 
-        # payment
+        ############
+        # Payments #
+        ############
+
         payment = {'bookingId': booking,
                    'stripeId': fake.pystr(10, 10),
                    'refunded': 0}
