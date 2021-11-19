@@ -29,7 +29,12 @@ def run(uri, token, size, debug):
     # Collect Flight Info #
     #######################
 
-    flights_list = json.loads(requests.get(uri['flights'] + '/api/v1/flights', verify=False, headers=token).text)
+    try:
+        flights_list = json.loads(requests.get(uri['flights'] + '/api/v1/flights', verify=False, headers=token).text)
+    except json.decoder.JSONDecodeError:
+        print("Unable to read Flight data when creating Bookings.\n"
+              "Please run the Flight data producer before Bookings.")
+        return
     flights = []
     for flight in flights_list:
         flights.append(flight['id'])
@@ -54,11 +59,11 @@ def run(uri, token, size, debug):
     if len(users) < 2 or len(agents) < 1:
         print("Unable to read User data when creating Bookings.\n"
               "Please run the User data producer before Bookings.")
-        exit(1)
+        return
     if len(flights) < 1:
         print("Unable to read Flight data when creating Bookings.\n"
               "Please run the Flight data producer before Bookings.")
-        exit(1)
+        return
 
     ##########################
     # Generate User Bookings #
