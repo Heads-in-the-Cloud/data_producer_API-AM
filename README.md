@@ -4,6 +4,7 @@ This repository contains the scripts for each of the Data Producers, along with 
 
 When running the producer, several environment variables must be specified:
 * uri_users (users API endpoint: i.e., http://localhost:8080)
+* uri_auth (auth API endpoint)
 * uri_flights (flights API endpoint)
 * uri_bookings (bookings API endpoint)
 * size_users (number of users to insert)
